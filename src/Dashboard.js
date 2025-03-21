@@ -1,26 +1,58 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, List, ListItem } from "@mui/material";
+import { Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 import axios from "axios";
 
 const Dashboard = () => {
-    const [users, setUsers] = useState([]);
+    const [user, setUser] = useState(null);
+    const [error, setError] = useState("");
 
     useEffect(() => {
-        axios.get("https://login-page-backend-998p.onrender.com/api/users")
-            .then(response => setUsers(response.data))
-            .catch(error => console.error("Error fetching users:", error));
+        const fetchUserDetails = async () => {
+            const token = localStorage.getItem("token"); // Get JWT token from localStorage
+            if (!token) {
+                setError("Unauthorized! Please log in.");
+                return;
+            }
+
+            try {
+                const response = await axios.get("https://your-backend-url.com/api/user-details", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setUser(response.data);
+            } catch (err) {
+                setError(err.response?.data?.error || "Error fetching user details!");
+            }
+        };
+
+        fetchUserDetails();
     }, []);
 
     return (
-        <Container maxWidth="sm" sx={{ textAlign: "center", mt: 5 }}>
-            <Typography variant="h5">Dashboard - User List</Typography>
-            <List>
-                {users.map(user => (
-                    <ListItem key={user._id}>
-                        {user.name} ({user.username}) - {user.email}
-                    </ListItem>
-                ))}
-            </List>
+        <Container maxWidth="md" sx={{ textAlign: "center", mt: 5 }}>
+            <Typography variant="h5">User Dashboard</Typography>
+
+            {error && <Typography color="error">{error}</Typography>}
+
+            {user && (
+                <TableContainer component={Paper} sx={{ mt: 3 }}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell><b>Name</b></TableCell>
+                                <TableCell><b>Username</b></TableCell>
+                                <TableCell><b>Email</b></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell>{user.name}</TableCell>
+                                <TableCell>{user.username}</TableCell>
+                                <TableCell>{user.email}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
         </Container>
     );
 };
